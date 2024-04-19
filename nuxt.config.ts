@@ -1,7 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
 	devtools: { enabled: true },
-	modules: ['nuxt-auth-utils', '@nuxtjs/eslint-module'],
+	modules: ['nuxt-auth-utils', '@nuxtjs/eslint-module', 'nuxt-rate-limit'],
 	runtimeConfig: {
 		db: {
 			dir: './server/database',
