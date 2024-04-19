@@ -8,6 +8,8 @@ export default antfu({
 		'jsonc/indent': ['error', 'tab'],
 		'style/no-tabs': 'off',
 		'vue/html-indent': ['error', 'tab'],
-		'style/indent': ['error', 'tab']
+		'style/indent': ['error', 'tab'],
+		'antfu/top-level-function': 'off',
+		'no-undef': 'off'
 	}
 });
