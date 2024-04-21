@@ -1,23 +1,14 @@
 <script lang="ts" setup>
 definePageMeta({
 	auth: {
-		authRequirement: 'authenticated'
+		authRequirement: 'either'
 	}
 });
-
-const logout = async () => {
-	await fetch('http://localhost:3000/api/user/logout', {
-		method: 'POST'
-	});
-	await navigateTo('/login');
-};
-
 </script>
 
 <template>
 	<div>
-		<h1>TEST</h1>
-		<button class="btn btn-outline-dark" @click="logout()">Logout</button>
-		<NuxtWelcome />
+		<h1>MAIN</h1>
+		<h2>Upcoming PR</h2>
 	</div>
 </template>
