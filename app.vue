@@ -1,5 +1,8 @@
 <template>
-	<div>
+	<UContainer class="max-w-screen-lg mx-auto pb-16">
+		<NavBar />
 		<NuxtPage />
-	</div>
+	</UContainer>
 </template>
+
+<script setup lang="ts"></script>
