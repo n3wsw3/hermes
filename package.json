@@ -14,12 +14,19 @@
 		"format": "prettier --write ."
 	},
 	"dependencies": {
+		"@iconify-json/logos": "^1.1.42",
+		"@nuxt/ui": "^2.15.2",
+		"@nuxtjs/i18n": "^8.3.0",
+		"@vuepic/vue-datepicker": "^8.5.0",
 		"argon2": "^0.40.1",
+		"busboy": "^1.6.0",
+		"date-fns": "^3.6.0",
 		"drizzle-orm": "^0.30.8",
 		"drizzle-zod": "^0.5.1",
 		"nuxt": "^3.11.2",
 		"nuxt-auth-utils": "^0.0.23",
 		"postgres": "^3.4.4",
+		"tailwindcss": "^3.4.3",
 		"vue": "^3.4.21",
 		"vue-router": "^4.3.0",
 		"zod": "^3.22.4"
