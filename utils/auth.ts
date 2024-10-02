@@ -1,5 +1,5 @@
-import type { z } from "zod";
-import type { registerSchema } from "~/server/types";
+import type { z } from 'zod';
+import type { registerSchema } from '~/server/types';
 
 export const logout = async (redirect?: string) => {
 	await fetch('http://localhost:3000/api/user/logout', {
@@ -17,9 +17,7 @@ export const login = async (state: { email: string; password: string }, redirect
 		},
 		body: JSON.stringify(state)
 	})
-		.then(res =>
-			res.status === 200 ? { success: true } : { success: false }
-		)
+		.then(res => (res.status === 200 ? { success: true } : { success: false }))
 		.catch(_ => ({
 			success: false
 		}));
@@ -39,9 +37,7 @@ export const register = async (state: z.infer<typeof registerSchema>): Promise<v
 		},
 		body: JSON.stringify(state)
 	})
-		.then(res =>
-			res.status === 201 ? { success: true } : { success: false }
-		)
+		.then(res => (res.status === 201 ? { success: true } : { success: false }))
 		.catch(_ => ({
 			success: false
 		}));

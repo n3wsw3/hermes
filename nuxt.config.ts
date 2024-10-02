@@ -23,7 +23,7 @@ export default defineNuxtConfig({
 	},
 	colorMode: {
 		classSuffix: '',
-		storage: 'localStorage', // or 'sessionStorage' or 'cookie'
+		storage: 'localStorage' // or 'sessionStorage' or 'cookie'
 	},
 	i18n: {
 		strategy: 'no_prefix',
@@ -35,7 +35,7 @@ export default defineNuxtConfig({
 			{
 				code: 'sv',
 				name: 'Svenska'
-			},
+			}
 		]
 	}
 });

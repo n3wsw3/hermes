@@ -32,19 +32,14 @@ const login = async (data: z.infer<typeof formSchema>) => {
 	await sendLogin(data).catch(err => (error.value = err.message));
 	isLoading.value = false;
 };
-
 </script>
 
 <template>
 	<div class="lg:p-8">
 		<div class="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
 			<div class="flex flex-col space-y-2 text-center">
-				<h1 class="text-2xl font-semibold tracking-tight">
-					Sign In
-				</h1>
-				<p class="text-sm text-muted-foreground">
-					Enter your email and password below to sign in.
-				</p>
+				<h1 class="text-2xl font-semibold tracking-tight">Sign In</h1>
+				<p class="text-sm text-muted-foreground">Enter your email and password below to sign in.</p>
 			</div>
 
 			<AutoForm :schema="formSchema" @submit="login" class="grid gap-3" :field-config="fieldConfig">
@@ -52,11 +47,8 @@ const login = async (data: z.infer<typeof formSchema>) => {
 					{{ error }}
 				</p>
 
-				<Button :disabled="isLoading">
-					Sign In with Email
-				</Button>
+				<Button :disabled="isLoading"> Sign In with Email </Button>
 			</AutoForm>
 		</div>
 	</div>
-
 </template>
