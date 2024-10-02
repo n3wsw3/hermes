@@ -9,6 +9,5 @@ definePageMeta({
 <template>
 	<div>
 		<h1>MAIN</h1>
-		<h2>Upcoming PR</h2>
 	</div>
 </template>

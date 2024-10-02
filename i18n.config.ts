@@ -4,9 +4,13 @@ export default defineI18nConfig(() => ({
 	messages: {
 		en: {
 			home: 'Home',
+			leaderboard: 'Leaderboard',
+			games: 'All Games',
 			prManager: 'PR Manager',
 			newPR: 'New PR',
 			signIn: 'Sign In',
+			logout: 'Logout',
+			register: 'Register',
 			email: 'Email',
 			password: 'Password',
 			new_pr: {
@@ -38,9 +42,13 @@ export default defineI18nConfig(() => ({
 		},
 		sv: {
 			home: 'Hem',
+			leaderboard: 'Leaderboard',
+			games: 'Alla Spel',
 			prManager: 'PR Hanterare',
 			newPR: 'Nytt PR',
 			signIn: 'Logga in',
+			logout: 'Logga ut',
+			register: 'Registrera',
 			email: 'E-post',
 			password: 'Lösenord',
 			new_pr: {

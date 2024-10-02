@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { z } from 'zod';
+import type { z } from 'zod';
+import { loginSchema } from '~/server/types';
 import { login as sendLogin } from '~/utils/auth';
 
 definePageMeta({
@@ -8,36 +9,54 @@ definePageMeta({
 	}
 });
 
-const schema = z.object({
-	email: z.string().min(1, 'Email is required').email('Invalid email'),
-	password: z.string().min(1, 'Password is required')
-});
-
-const state = reactive({
-	email: '',
-	password: ''
-});
-
 const error = ref<string | null>(null);
+const isLoading = ref(false);
 
-const login = async () => {
-	await sendLogin(state).catch(err => (error.value = err.message));
+const formSchema = loginSchema;
+const fieldConfig = {
+	password: {
+		inputProps: {
+			type: 'password',
+			placeholder: '••••••••'
+		}
+	},
+	email: {
+		inputProps: {
+			placeholder: 'email@example.com'
+		}
+	}
 };
+
+const login = async (data: z.infer<typeof formSchema>) => {
+	isLoading.value = true;
+	await sendLogin(data).catch(err => (error.value = err.message));
+	isLoading.value = false;
+};
+
 </script>
 
 <template>
-	<div class="max-w-96 mx-auto px-4 py-5 sm:p-6 rounded-lg ring-1 ring-gray-800 bg-gray-900 mt-20">
-		<h1 class="text-3xl sm:text-4xl font-bold text-white tracking-tight">{{ $t('signIn') }}</h1>
-		<UForm :schema="schema" :state="state" class="space-y-4 mt-4" @submit="login">
-			<UFormGroup :label="$t('email')" name="email">
-				<UInput v-model="state.email" autocomplete="username" />
-			</UFormGroup>
+	<div class="lg:p-8">
+		<div class="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+			<div class="flex flex-col space-y-2 text-center">
+				<h1 class="text-2xl font-semibold tracking-tight">
+					Sign In
+				</h1>
+				<p class="text-sm text-muted-foreground">
+					Enter your email and password below to sign in.
+				</p>
+			</div>
 
-			<UFormGroup :label="$t('password')" name="password">
-				<UInput v-model="state.password" type="password" autocomplete="current-password" />
-			</UFormGroup>
+			<AutoForm :schema="formSchema" @submit="login" class="grid gap-3" :field-config="fieldConfig">
+				<p class="text-sm font-medium text-destructive text-center">
+					{{ error }}
+				</p>
 
-			<UButton type="submit"> {{ $t('signIn') }} </UButton>
-		</UForm>
+				<Button :disabled="isLoading">
+					Sign In with Email
+				</Button>
+			</AutoForm>
+		</div>
 	</div>
+
 </template>

@@ -1,68 +1,129 @@
 <template>
-	<nav class="relative w-full flex items-center justify-between mb-8">
-		<ul class="flex items-center min-w-0">
-			<li class="min-w-0">
-				<NuxtLink to="/" :class="defaultClass" :exact-active-class="activeClass" class="text-gray-400 hover:text-white">
-					<span class="trucate relative"> {{ $t('home') }} </span>
+	<div class="border-b-2 border-primary border-opacity-50 p-4">
+		<NavigationMenu class="w-full max-w-full flex justify-between container">
+			<div class="flex gap-3">
+				<NuxtLink to="/" class="uppercase font-bold text-[42px] leading-none align-bottom">
+					Hermes
 				</NuxtLink>
-			</li>
-			<template v-if="!!loggedIn">
-				<li class="min-w-0">
-					<NuxtLink
-						to="/pr-manager"
-						:class="defaultClass"
-						:exact-active-class="activeClass"
-						class="text-gray-400 hover:text-white"
-					>
-						<span class="trucate relative"> {{ $t('prManager') }} </span>
-					</NuxtLink>
-				</li>
-				<li class="min-w-0">
-					<NuxtLink
-						to="/new-pr"
-						:class="defaultClass"
-						:exact-active-class="activeClass"
-						class="text-gray-400 hover:text-white"
-					>
-						<span class="trucate relative"> {{ $t('newPR') }}</span>
-					</NuxtLink>
-				</li>
-			</template>
-		</ul>
-		<ul class="flex items-center min-w-0">
-			<li class="min-w-0 mx-2">
-				<USelectMenu v-model="locale" :options="availableLocales" />
-			</li>
-			<li class="min-w-0">
-				<template v-if="!!loggedIn">
-					<button
-						@click="async () => await logout()"
-						:class="defaultClass"
-						class="before:bg-primary-400 hover:before:bg-primary-500 text-gray-900"
-					>
-						<span class="trucate relative"> Logout </span>
-					</button>
+				<NavigationMenuList>
+					<NavigationMenuItem>
+						<NuxtLink to="/" :exact-active-class="activeClass">
+							<NavigationMenuLink :class="navigationMenuTriggerStyle()">
+								{{ $t('home') }}
+							</NavigationMenuLink>
+						</NuxtLink>
+					</NavigationMenuItem>
+					<NavigationMenuItem>
+						<NuxtLink to="/games" :exact-active-class="activeClass">
+							<NavigationMenuLink :class="navigationMenuTriggerStyle()">
+								{{ $t('games') }}
+							</NavigationMenuLink>
+						</NuxtLink>
+					</NavigationMenuItem>
+					<NavigationMenuItem>
+						<NuxtLink to="/leaderboard" :exact-active-class="activeClass">
+							<NavigationMenuLink :class="navigationMenuTriggerStyle()">
+								{{ $t('leaderboard') }}
+							</NavigationMenuLink>
+						</NuxtLink>
+					</NavigationMenuItem>
+				</NavigationMenuList>
+			</div>
+			<NavigationMenuList>
+				<NavigationMenuItem>
+
+					<DropdownMenu>
+						<DropdownMenuTrigger as-child>
+							<Button variant="outline" class="w-9 h-9 p-0">
+								<Icon icon="radix-icons:moon"
+									class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+								<Icon icon="radix-icons:sun"
+									class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+								<span class="sr-only">Toggle theme</span>
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							<DropdownMenuItem @click="colorMode.preference = 'light'">
+								Light
+							</DropdownMenuItem>
+							<DropdownMenuItem @click="colorMode.preference = 'dark'">
+								Dark
+							</DropdownMenuItem>
+							<DropdownMenuItem @click="colorMode.preference = 'system'">
+								System
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				</NavigationMenuItem>
+				<NavigationMenuItem>
+
+					<DropdownMenu>
+						<DropdownMenuTrigger as-child>
+							<Button variant="outline" class="w-9 h-9 p-0">
+								<Icon :icon="currentFlag"
+									class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+
+								<span class="sr-only">Select Language</span>
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							<DropdownMenuItem v-for="locale in localesWithInfo" :key="locale.code"
+								@click="setLocale(locale.code)">
+								<Icon :icon="locale.icon" class="mr-2" />
+								{{ locale.name }}
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				</NavigationMenuItem>
+				<template v-if="!loggedIn">
+					<NavigationMenuItem>
+						<NuxtLink to="/login" :exact-active-class="activeClass">
+							<NavigationMenuLink :class="navigationMenuTriggerStyle()">
+								{{ $t('signIn') }}
+							</NavigationMenuLink>
+						</NuxtLink>
+					</NavigationMenuItem>
+					<NavigationMenuItem>
+						<NuxtLink to="/register" :exact-active-class="activeClass">
+							<NavigationMenuLink :class="navigationMenuTriggerStyle()">
+								{{ $t('register') }}
+							</NavigationMenuLink>
+						</NuxtLink>
+					</NavigationMenuItem>
 				</template>
-				<template v-else>
-					<NuxtLink
-						to="/login"
-						:class="defaultClass"
-						class="before:bg-primary-400 hover:before:bg-primary-500 text-gray-900 hover:text-gray-900"
-						exact-active-class="after:bg-primary-500"
-					>
-						<span class="trucate relative"> {{ $t('signIn') }} </span>
-					</NuxtLink>
-				</template>
-			</li>
-		</ul>
-	</nav>
+				<NavigationMenuItem v-else>
+					<Button class="h-9" @click="async () => await logout()">
+						{{ $t('logout') }}
+					</Button>
+				</NavigationMenuItem>
+			</NavigationMenuList>
+		</NavigationMenu>
+	</div>
 </template>
 
 <script setup lang="ts">
+import { Icon } from '@iconify/vue'
+import { navigationMenuTriggerStyle } from './ui/navigation-menu';
+
+const colorMode = useColorMode();
+
 const { loggedIn } = useUserSession();
 
-const defaultClass =
-	'relative w-full flex items-center gap-1.5 px-2.5 py-3.5 rounded-md font-medium text-sm focus:outline-none focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-primary-400 disabled:cursor-not-allowed disabled:opacity-75 before:absolute before:inset-x-0 before:inset-y-2 before:inset-px before:rounded-md hover:before:bg-gray-800/50 after:absolute after:bottom-0 after:inset-x-2.5 after:block after:h-[2px] after:mt-2';
-const activeClass = 'after:bg-primary-500 text-white';
-const { locale, setLocale, availableLocales } = useI18n();
+const activeClass = 'border-b-primary border-b-2 inline-block';
+const { locale, setLocale, locales } = useI18n();
+
+const flags = {
+	en: 'emojione-v1:flag-for-united-states',
+	sv: 'emojione-v1:flag-for-sweden',
+	unknown: 'fluent-mdl2:unknown'
+};
+
+const currentFlag = computed(() => flags[locale.value as keyof typeof flags] ?? flags.unknown);
+const currentFullName = computed(() => locales.value.find(loc => loc.code === locale.value)?.name ?? 'Unknown');
+
+const localesWithInfo = computed(() => locales.value.map(loc => ({
+	...loc,
+	icon: flags[loc.code as keyof typeof flags] ?? flags.unknown
+})));
+
 </script>

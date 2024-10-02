@@ -9,7 +9,7 @@ export default defineEventHandler(async event => {
 
 	const fechedUsers = await useDb().select().from(users).where(eq(users.email, email));
 
-	if (fechedUsers.length === 0) {
+	if (fechedUsers.length === 0 && !(await verifyPassword('dummy', 'dummy'))) {
 		throw new Error('Invalid email or password');
 	}
 

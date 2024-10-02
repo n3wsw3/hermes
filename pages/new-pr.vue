@@ -2,7 +2,7 @@
 	<div>
 		<Header1>{{ $t('new_pr.title') }}</Header1>
 		<p class="text-gray-500">{{ $t('new_pr.description') }}</p>
-		<UForm :state="state" class="flex gap-3 flex-col">
+		<!-- <UForm :state="state" class="flex gap-3 flex-col">
 			<Header2>{{ $t('new_pr.information') }}</Header2>
 			<UFormGroup :label="$t('new_pr.event_name')" class="flex-1">
 				<UInput :placeholder="$t('new_pr.event_name_placeholder')" v-model="eventName" />
@@ -66,7 +66,7 @@
 			</div>
 
 			<UButton class="ml-auto flex justify-center w-fit">{{ $t('new_pr.submit') }}</UButton>
-		</UForm>
+		</UForm> -->
 	</div>
 </template>
 

@@ -1,8 +1,10 @@
 <template>
-	<UContainer class="max-w-screen-lg mx-auto pb-16">
-		<NavBar />
+	<NavBar />
+	<div class="bg-background container">
 		<NuxtPage />
-	</UContainer>
+	</div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+
+</script>
