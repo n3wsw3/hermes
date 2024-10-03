@@ -15,7 +15,7 @@ export default defineEventHandler(async event => {
 
 	const user = fechedUsers[0];
 
-	if (!(await verifyPassword(password, user.password))) {
+	if (!(await verifyPassword(user.password, password))) {
 		throw new Error('Invalid email or password');
 	}
 
