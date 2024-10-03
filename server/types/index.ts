@@ -19,6 +19,10 @@ export const insertVerifyEmailTokenSchema = createInsertSchema(emailVerification
 	updated_at: true
 });
 
+export const verifyEmailSchema = z.object({
+	token: z.string()
+});
+
 export const loginSchema = z.object({
 	email: z.string().email(),
 	password: z.string()

@@ -20,6 +20,7 @@ export const users = sqliteTable(
 		updated_at: integer('updated_at', { mode: 'timestamp' })
 			.notNull()
 			.$defaultFn(() => new Date())
+			.$onUpdateFn(() => new Date())
 	},
 	users => ({
 		idIndex: uniqueIndex('id_idx').on(users.id),
@@ -42,6 +43,7 @@ export const emailVerificationTokens = sqliteTable(
 		updated_at: integer('updated_at', { mode: 'timestamp' })
 			.notNull()
 			.$defaultFn(() => new Date())
+			.$onUpdateFn(() => new Date())
 	},
 	emailVerificationTokens => ({
 		userIndex: uniqueIndex('user_idx').on(emailVerificationTokens.user_id),

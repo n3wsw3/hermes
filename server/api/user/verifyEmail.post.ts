@@ -1,41 +1,26 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { emailVerificationTokens, users } from '~/server/database/schema';
-import { insertVerifyEmailTokenSchema } from '~/server/types';
+import { verifyEmailSchema } from '~/server/types';
 
 export default defineEventHandler(async event => {
 	const body = await readBody(event);
 
-	const { token, user_id } = await insertVerifyEmailTokenSchema.parseAsync(body);
+	const { user: { id: user_id } } = await requireUserSession(event);
 
-	const storedTokens = await useDb()
-		.select()
+	const { token } = await verifyEmailSchema.parseAsync(body);
+
+	const storedToken = (await useDb().select()
 		.from(emailVerificationTokens)
-		.where(eq(emailVerificationTokens.user_id, user_id));
+		.where(and(eq(emailVerificationTokens.user_id, user_id), eq(emailVerificationTokens.token, token)))
+	).at(0);
 
-	if (storedTokens.length === 0) {
-		throw new Error('Invalid token');
+	if (storedToken === undefined) {
+		throw createError({ message: 'Invalid token', status: 400 });
 	}
 
-	// Last is first in the array
-	storedTokens.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
-
-	if (storedTokens.length > 1) {
-		console.log(`Multiple tokens found for the same user (${user_id}). Will delete all but the last created token.`);
-		const tokensToDelete = storedTokens.slice(1).map(({ id }) => id);
-		await useDb()
-			.delete(emailVerificationTokens)
-			.where(and(eq(emailVerificationTokens.user_id, user_id), inArray(emailVerificationTokens.id, tokensToDelete)))
-			.execute();
-	}
-
-	const storedToken = storedTokens[0];
-
-	if (storedToken.token !== token) {
-		throw new Error('Invalid token');
-	}
-
-	await useDb().delete(emailVerificationTokens).where(eq(emailVerificationTokens.id, storedToken.id)).execute();
-	await useDb().update(users).set({ emailIsVerified: true }).where(eq(users.id, user_id)).execute();
+	// Delete all old tokens
+	await useDb().delete(emailVerificationTokens).where(eq(emailVerificationTokens.id, storedToken.id));
+	await useDb().update(users).set({ emailIsVerified: true }).where(eq(users.id, user_id));
 
 	return { success: true };
 });

@@ -10,13 +10,13 @@ export default defineEventHandler(async event => {
 	const fechedUsers = await useDb().select().from(users).where(eq(users.email, email));
 
 	if (fechedUsers.length === 0 && !(await verifyPassword('dummy', 'dummy'))) {
-		throw new Error('Invalid email or password');
+		throw createError({ message: 'Invalid email or password', status: 400 });
 	}
 
 	const user = fechedUsers[0];
 
 	if (!(await verifyPassword(user.password, password))) {
-		throw new Error('Invalid email or password');
+		throw createError({ message: 'Invalid email or password', status: 400 });
 	}
 
 	await setUserSession(event, { user: { id: user.id } });
