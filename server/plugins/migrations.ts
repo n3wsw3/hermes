@@ -1,10 +1,16 @@
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import { useDb } from '../utils/db';
+import { consola } from 'consola'
+import { migrate } from 'drizzle-orm/d1/migrator'
 
 export default defineNitroPlugin(async () => {
-	const config = useRuntimeConfig();
+	if (!import.meta.dev) return
 
-	migrate(useDb(), { migrationsFolder: config.db.migrations })
-		.then(() => console.log('Migrations complete'))
-		.catch(err => console.error(err));
-});
+	onHubReady(async () => {
+		await migrate(useDb(), { migrationsFolder: 'server/database/migrations' })
+			.then(() => {
+				consola.success('Database migrations done')
+			})
+			.catch((err) => {
+				consola.error('Database migrations failed', err)
+			})
+	})
+})

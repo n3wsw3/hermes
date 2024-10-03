@@ -60,9 +60,9 @@ const login = async (data: z.infer<typeof formSchema>) => {
 
 			<p class="px-8 text-center text-sm text-muted-foreground">
 				By clicking register, you agree to our
-				<a href="/terms" class="underline underline-offset-4 hover:text-primary"> Terms of Service </a>
+				<NuxtLink to="/terms" class="underline underline-offset-4 hover:text-primary">Terms of Service</NuxtLink>
 				and
-				<a href="/privacy" class="underline underline-offset-4 hover:text-primary"> Privacy Policy </a>
+				<NuxtLink to="/privacy" class="underline underline-offset-4 hover:text-primary">Privacy Policy</NuxtLink>
 				.
 			</p>
 		</div>
