@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import type { registerSchema } from '~/server/types';
 
 export const logout = async (redirect?: string) => {
-	await fetch('http://localhost:3000/api/user/logout', {
+	await fetch('/api/user/logout', {
 		method: 'POST'
 	});
 	useUserSession().fetch();
@@ -10,7 +10,7 @@ export const logout = async (redirect?: string) => {
 };
 
 export const login = async (state: { email: string; password: string }, redirect?: string): Promise<void> => {
-	const res = await fetch('http://localhost:3000/api/user/login', {
+	const res = await fetch('/api/user/login', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -30,7 +30,7 @@ export const login = async (state: { email: string; password: string }, redirect
 };
 
 export const register = async (state: z.infer<typeof registerSchema>): Promise<void> => {
-	const res = await fetch('http://localhost:3000/api/user/register', {
+	const res = await fetch('api/user/register', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
