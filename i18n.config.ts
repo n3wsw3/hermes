@@ -5,7 +5,13 @@ export default defineI18nConfig(() => ({
 		en: {
 			home: 'Home',
 			leaderboard: 'Leaderboard',
-			games: 'All Games',
+			allgames: 'All Games',
+			games: {
+				blackjack: 'Blackjack',
+				roulette: 'Roulette',
+				RockPaperScissors: 'Rock Paper Scissors',
+				poker: 'Poker'
+			},
 			prManager: 'PR Manager',
 			newPR: 'New PR',
 			signIn: 'Sign In',

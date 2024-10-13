@@ -1,12 +1,12 @@
 {
 	"version": "5",
-	"dialect": "sqlite",
+	"dialect": "pg",
 	"entries": [
 		{
 			"idx": 0,
 			"version": "5",
-			"when": 1727950135463,
-			"tag": "0000_many_roxanne_simpson",
+			"when": 1728568181223,
+			"tag": "0000_sticky_misty_knight",
 			"breakpoints": true
 		}
 	]

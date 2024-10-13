@@ -5,13 +5,17 @@ import { verifyEmailSchema } from '~/server/types';
 export default defineEventHandler(async event => {
 	const body = await readBody(event);
 
-	const { user: { id: user_id } } = await requireUserSession(event);
+	const {
+		user: { id: user_id }
+	} = await requireUserSession(event);
 
 	const { token } = await verifyEmailSchema.parseAsync(body);
 
-	const storedToken = (await useDb().select()
-		.from(emailVerificationTokens)
-		.where(and(eq(emailVerificationTokens.user_id, user_id), eq(emailVerificationTokens.token, token)))
+	const storedToken = (
+		await useDb()
+			.select()
+			.from(emailVerificationTokens)
+			.where(and(eq(emailVerificationTokens.user_id, user_id), eq(emailVerificationTokens.token, token)))
 	).at(0);
 
 	if (storedToken === undefined) {

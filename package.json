@@ -8,19 +8,19 @@
 		"generate": "nuxt generate",
 		"preview": "nuxt preview",
 		"postinstall": "nuxt prepare",
-		"db:generate": "drizzle-kit generate:sqlite",
+		"db:generate": "drizzle-kit generate:pg",
 		"lint": "eslint .",
 		"lint:fix": "eslint . --fix",
 		"format": "prettier --write ."
 	},
 	"dependencies": {
 		"@iconify-json/logos": "^1.1.42",
-		"@nuxthub/core": "^0.7.23",
 		"@nuxtjs/color-mode": "^3.5.1",
 		"@nuxtjs/i18n": "^8.3.0",
 		"@vee-validate/zod": "^4.13.2",
 		"@vuepic/vue-datepicker": "^8.5.0",
 		"@vueuse/core": "^11.1.0",
+		"argon2": "^0.41.1",
 		"busboy": "^1.6.0",
 		"class-variance-authority": "^0.7.0",
 		"clsx": "^2.1.1",
@@ -30,6 +30,7 @@
 		"lucide-vue-next": "^0.446.0",
 		"nuxt": "^3.11.2",
 		"nuxt-auth-utils": "^0.0.23",
+		"postgres": "^3.4.4",
 		"radix-vue": "^1.9.6",
 		"shadcn-nuxt": "^0.10.4",
 		"tailwind-merge": "^2.5.2",
@@ -60,8 +61,7 @@
 		"nuxt-rate-limit": "^1.2.0",
 		"prettier": "^3.2.5",
 		"prettier-plugin-tailwindcss": "^0.5.14",
-		"typescript-eslint": "^7.7.0",
-		"wrangler": "^3.79.0"
+		"typescript-eslint": "^7.7.0"
 	},
 	"packageManager": "pnpm@9.10.0+sha512.73a29afa36a0d092ece5271de5177ecbf8318d454ecd701343131b8ebc0c1a91c487da46ab77c8e596d6acf1461e3594ced4becedf8921b074fbd8653ed7051c"
 }

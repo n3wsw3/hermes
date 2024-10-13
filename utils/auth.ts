@@ -49,7 +49,9 @@ export const register = async (state: z.infer<typeof registerSchema>): Promise<v
 	}
 };
 
-export const verifyEmail = async (token: string): Promise<{success: true, error: null } | {success: false, error: string}> => {
+export const verifyEmail = async (
+	token: string
+): Promise<{ success: true; error: null } | { success: false; error: string }> => {
 	try {
 		const res = await fetch('api/user/verifyEmail', {
 			method: 'POST',
@@ -59,7 +61,7 @@ export const verifyEmail = async (token: string): Promise<{success: true, error:
 			body: JSON.stringify({ token })
 		});
 
-		const data = await res.json<{message: string}>();
+		const data = await res.json<{ message: string }>();
 
 		if (res.status === 200) {
 			return { success: true, error: null };

@@ -1,54 +1,48 @@
 {
-	"version": "5",
-	"dialect": "sqlite",
-	"id": "12938f0c-4a55-4cff-9f1d-ea4813feeeb3",
+	"id": "6f158e21-ef48-4990-8f74-de10020c6cda",
 	"prevId": "00000000-0000-0000-0000-000000000000",
+	"version": "5",
+	"dialect": "pg",
 	"tables": {
 		"email_verification_tokens": {
 			"name": "email_verification_tokens",
+			"schema": "",
 			"columns": {
 				"id": {
 					"name": "id",
-					"type": "text",
+					"type": "uuid",
 					"primaryKey": true,
 					"notNull": true,
-					"autoincrement": false
+					"default": "gen_random_uuid()"
 				},
 				"user_id": {
 					"name": "user_id",
-					"type": "text",
+					"type": "uuid",
 					"primaryKey": false,
-					"notNull": true,
-					"autoincrement": false
+					"notNull": true
 				},
 				"token": {
 					"name": "token",
 					"type": "text",
 					"primaryKey": false,
-					"notNull": true,
-					"autoincrement": false
+					"notNull": true
 				},
 				"created_at": {
 					"name": "created_at",
-					"type": "integer",
+					"type": "timestamp",
 					"primaryKey": false,
 					"notNull": true,
-					"autoincrement": false
+					"default": "now()"
 				},
 				"updated_at": {
 					"name": "updated_at",
-					"type": "integer",
+					"type": "timestamp",
 					"primaryKey": false,
 					"notNull": true,
-					"autoincrement": false
+					"default": "now()"
 				}
 			},
 			"indexes": {
-				"email_verification_tokens_id_unique": {
-					"name": "email_verification_tokens_id_unique",
-					"columns": ["id"],
-					"isUnique": true
-				},
 				"user_idx": {
 					"name": "user_idx",
 					"columns": ["user_id"],
@@ -72,81 +66,73 @@
 				}
 			},
 			"compositePrimaryKeys": {},
-			"uniqueConstraints": {}
+			"uniqueConstraints": {
+				"email_verification_tokens_id_unique": {
+					"name": "email_verification_tokens_id_unique",
+					"nullsNotDistinct": false,
+					"columns": ["id"]
+				}
+			}
 		},
 		"users": {
 			"name": "users",
+			"schema": "",
 			"columns": {
 				"id": {
 					"name": "id",
-					"type": "text",
+					"type": "uuid",
 					"primaryKey": true,
 					"notNull": true,
-					"autoincrement": false
+					"default": "gen_random_uuid()"
 				},
 				"name": {
 					"name": "name",
 					"type": "text",
 					"primaryKey": false,
-					"notNull": true,
-					"autoincrement": false
+					"notNull": true
 				},
 				"email": {
 					"name": "email",
 					"type": "text",
 					"primaryKey": false,
-					"notNull": true,
-					"autoincrement": false
+					"notNull": true
 				},
 				"email_is_verified": {
 					"name": "email_is_verified",
-					"type": "integer",
+					"type": "boolean",
 					"primaryKey": false,
 					"notNull": true,
-					"autoincrement": false,
 					"default": false
 				},
 				"password": {
 					"name": "password",
 					"type": "text",
 					"primaryKey": false,
-					"notNull": true,
-					"autoincrement": false
+					"notNull": true
 				},
 				"role": {
 					"name": "role",
-					"type": "text",
+					"type": "role",
 					"primaryKey": false,
 					"notNull": true,
-					"autoincrement": false,
 					"default": "'unverified'"
 				},
 				"created_at": {
 					"name": "created_at",
-					"type": "integer",
+					"type": "timestamp",
 					"primaryKey": false,
 					"notNull": true,
-					"autoincrement": false
+					"default": "now()"
 				},
 				"updated_at": {
 					"name": "updated_at",
-					"type": "integer",
+					"type": "timestamp",
 					"primaryKey": false,
 					"notNull": true,
-					"autoincrement": false
+					"default": "now()"
 				}
 			},
 			"indexes": {
-				"users_id_unique": {
-					"name": "users_id_unique",
-					"columns": ["id"],
-					"isUnique": true
-				},
-				"users_email_unique": {
-					"name": "users_email_unique",
-					"columns": ["email"],
-					"isUnique": true
-				},
 				"id_idx": {
 					"name": "id_idx",
 					"columns": ["id"],
@@ -160,13 +146,34 @@
 			},
 			"foreignKeys": {},
 			"compositePrimaryKeys": {},
-			"uniqueConstraints": {}
+			"uniqueConstraints": {
+				"users_id_unique": {
+					"name": "users_id_unique",
+					"nullsNotDistinct": false,
+					"columns": ["id"]
+				},
+				"users_email_unique": {
+					"name": "users_email_unique",
+					"nullsNotDistinct": false,
+					"columns": ["email"]
+				}
+			}
 		}
 	},
-	"enums": {},
+	"enums": {
+		"role": {
+			"name": "role",
+			"values": {
+				"unverified": "unverified",
+				"user": "user",
+				"admin": "admin"
+			}
+		}
+	},
+	"schemas": {},
 	"_meta": {
+		"columns": {},
 		"schemas": {},
-		"tables": {},
-		"columns": {}
+		"tables": {}
 	}
 }

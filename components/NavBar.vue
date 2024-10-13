@@ -1,29 +1,64 @@
 <template>
 	<div class="border-b-2 border-primary border-opacity-50 p-4">
-		<NavigationMenu class="w-full max-w-full flex justify-between container">
+		<NavigationMenu class="container flex justify-between max-w-[1400px]">
 			<div class="flex gap-3">
 				<NuxtLink to="/" class="uppercase font-bold text-[42px] leading-none align-bottom"> Hermes </NuxtLink>
 				<NavigationMenuList>
-					<NavigationMenuItem>
-						<NuxtLink to="/" :exact-active-class="activeClass">
-							<NavigationMenuLink :class="navigationMenuTriggerStyle()">
-								{{ $t('home') }}
-							</NavigationMenuLink>
-						</NuxtLink>
-					</NavigationMenuItem>
-					<NavigationMenuItem>
-						<NuxtLink to="/games" :exact-active-class="activeClass">
-							<NavigationMenuLink :class="navigationMenuTriggerStyle()">
-								{{ $t('games') }}
-							</NavigationMenuLink>
-						</NuxtLink>
-					</NavigationMenuItem>
-					<NavigationMenuItem>
-						<NuxtLink to="/leaderboard" :exact-active-class="activeClass">
-							<NavigationMenuLink :class="navigationMenuTriggerStyle()">
-								{{ $t('leaderboard') }}
-							</NavigationMenuLink>
-						</NuxtLink>
+					<NavigationMenuItem v-for="component in navbar" :key="component.key">
+						<template v-if="component.children">
+							<NavigationMenuTrigger>
+								<NavigationMenuLink>
+									{{ component.displayName ?? $t(component.key) }}
+								</NavigationMenuLink>
+							</NavigationMenuTrigger>
+							<NavigationMenuContent>
+								<ul class="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+									<li v-if="component.to" class="col-span-2">
+										<NuxtLink
+											:to="component.to"
+											class="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+										>
+											<NavigationMenuLink>
+												<div class="text-lg text-center font-medium leading-none">
+													{{ component.displayName ?? $t(component.key) }}
+												</div>
+												<p v-if="component.description" class="line-clamp-2 text-sm leading-snug text-muted-foreground">
+													{{ component.description }}
+												</p>
+											</NavigationMenuLink>
+										</NuxtLink>
+										<Separator />
+									</li>
+									<li v-for="child in component.children" :key="child.key">
+										<NuxtLink
+											:to="child.to"
+											class="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+										>
+											<NavigationMenuLink>
+												<div class="text-sm font-medium leading-none">{{ child.displayName ?? $t(child.key) }}</div>
+												<p v-if="child.description" class="line-clamp-2 text-sm leading-snug text-muted-foreground">
+													{{ child.description }}
+												</p>
+											</NavigationMenuLink>
+										</NuxtLink>
+									</li>
+								</ul>
+							</NavigationMenuContent>
+						</template>
+						<template v-else>
+							<template v-if="component.to">
+								<NuxtLink :to="component.to" :exact-active-class="activeClass">
+									<NavigationMenuLink :class="navigationMenuTriggerStyle()">
+										{{ component.displayName ?? $t(component.key) }}
+									</NavigationMenuLink>
+								</NuxtLink>
+							</template>
+							<template v-else>
+								<NavigationMenuLink>
+									{{ component.displayName ?? $t(component.key) }}
+								</NavigationMenuLink>
+							</template>
+						</template>
 					</NavigationMenuItem>
 				</NavigationMenuList>
 			</div>
@@ -83,11 +118,26 @@
 						</NuxtLink>
 					</NavigationMenuItem>
 				</template>
-				<NavigationMenuItem v-else>
-					<Button class="h-9" @click="async () => await logout()">
-						{{ $t('logout') }}
-					</Button>
-				</NavigationMenuItem>
+				<template v-else>
+					<NavigationMenuItem>
+						<DropdownMenu>
+							<DropdownMenuTrigger as-child>
+								<Button variant="secondary" size="icon" class="rounded-full">
+									<CircleUser class="h-5 w-5" />
+									<span class="sr-only">Toggle user menu</span>
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuLabel>My Account</DropdownMenuLabel>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem>Settings</DropdownMenuItem>
+								<DropdownMenuItem>Support</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem @click="async () => await logout()">{{ $t('logout') }}</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</NavigationMenuItem>
+				</template>
 			</NavigationMenuList>
 		</NavigationMenu>
 	</div>
@@ -96,6 +146,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
 import { navigationMenuTriggerStyle } from './ui/navigation-menu';
+import { CircleUser } from 'lucide-vue-next';
 
 const colorMode = useColorMode();
 
@@ -119,4 +170,47 @@ const localesWithInfo = computed(() =>
 		icon: flags[loc.code as keyof typeof flags] ?? flags.unknown
 	}))
 );
+
+interface NavigationMenuItem {
+	key: string;
+	displayName?: string;
+	description?: string;
+	to?: string;
+	children?: NavigationMenuItem[];
+}
+
+const navbar = computed<NavigationMenuItem[]>(() => [
+	{
+		key: 'home',
+		to: '/'
+	},
+	{
+		key: 'allgames',
+		to: '/games',
+		description: 'This is where the magic happens',
+		children: [
+			{
+				key: 'games.blackjack',
+				to: '/games/blackjack',
+				description: 'Play blackjack against the dealer'
+			},
+			{
+				key: 'games.roulette',
+				to: '/games/roulette'
+			},
+			{
+				key: 'games.RockPaperScissors',
+				to: '/games/rock-paper-scissors'
+			},
+			{
+				key: 'games.poker',
+				to: '/games/poker'
+			}
+		]
+	},
+	{
+		key: 'leaderboard',
+		to: '/leaderboard'
+	}
+]);
 </script>

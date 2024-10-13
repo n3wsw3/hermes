@@ -1,6 +1,13 @@
-import { drizzle } from 'drizzle-orm/d1';
-import * as schema from '../database/schema';
+import { PostgresJsDatabase, drizzle } from 'drizzle-orm/postgres-js/driver';
+import postgres from 'postgres';
+
+let pg: postgres.Sql | null = null;
+let db: PostgresJsDatabase | null = null;
 
 export const useDb = () => {
-	return drizzle(hubDatabase(), { schema });
+	if (!db) {
+		pg = postgres(useRuntimeConfig().db.connection_string, { max: 1 });
+		db = drizzle(pg);
+	}
+	return db;
 };

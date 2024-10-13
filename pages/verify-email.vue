@@ -52,7 +52,7 @@ const verifyEmail = async () => {
 	}
 	isLoading.value = true;
 
-	const {success, error} = await sendVerifyEmail(token.value);
+	const { success, error } = await sendVerifyEmail(token.value);
 
 	if (success) {
 		toast({
@@ -82,13 +82,17 @@ onMounted(async () => {
 			<div class="flex flex-col space-y-2 text-center">
 				<h1 class="text-2xl font-semibold tracking-tight">Verify Email</h1>
 				<p class="text-sm text-muted-foreground">
-					We have sent an email to your email address. Please enter the code below to
-					verify your email address.
+					We have sent an email to your email address. Please enter the code below to verify your email address.
 				</p>
 			</div>
 
 			<div class="flex gap-2">
-				<Input v-model="token" placeholder="Enter verification code" class="flex-1" :disabled="isLoading || resendIsLoading" />
+				<Input
+					v-model="token"
+					placeholder="Enter verification code"
+					class="flex-1"
+					:disabled="isLoading || resendIsLoading"
+				/>
 				<Button @click="verifyEmail" :disabled="isLoading || resendIsLoading">
 					<Loader2 v-if="isLoading" class="w-5 h-5 mr-2 animate-spin" />
 					Verify Email
@@ -96,7 +100,12 @@ onMounted(async () => {
 			</div>
 
 			<div class="flex flex-col space-y-2">
-				<Button variant="outline" @click="resendVerificationEmail" class="w-full" :disabled="isLoading || resendIsLoading">
+				<Button
+					variant="outline"
+					@click="resendVerificationEmail"
+					class="w-full"
+					:disabled="isLoading || resendIsLoading"
+				>
 					<Loader2 v-if="resendIsLoading" class="w-5 h-5 mr-2 animate-spin" />
 					Resend Verification Email
 				</Button>
