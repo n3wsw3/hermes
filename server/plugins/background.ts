@@ -1,4 +1,4 @@
-import {consola} from 'consola';
+import { consola } from 'consola';
 import tasks from '~/server/background';
 
 type BackgroundTask = {
@@ -9,8 +9,7 @@ type BackgroundTask = {
 
 const background_tasks: Array<NodeJS.Timeout> = [];
 
-export default defineNitroPlugin(async (nuxtApp) => {
-
+export default defineNitroPlugin(async nuxtApp => {
 	const addBackgroundTask = (task: BackgroundTask) => {
 		// consola.info(`Adding background task: ${task.id}`);
 		const task_id = setInterval(task.task, task.interval);
