@@ -1,0 +1,18 @@
+{
+	"tasks": {
+		"dev": "deno run --allow-env --allow-read --allow-net --env --watch main.ts"
+	},
+	"imports": {
+		"@std/assert": "jsr:@std/assert@1",
+		"consola": "npm:consola",
+		"@types/ws": "npm:@types/ws",
+		"ws": "npm:ws",
+		"zod": "npm:zod",
+		"seedrandom": "npm:seedrandom",
+		"@types/seedrandom": "npm:@types/seedrandom",
+		"hex": "jsr:@std/encoding/hex"
+	},
+	"fmt": {
+		"useTabs": true
+	}
+}
