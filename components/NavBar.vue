@@ -17,6 +17,7 @@
 										<NuxtLink
 											:to="component.to"
 											class="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+											v-if="!component.disabled"
 										>
 											<NavigationMenuLink>
 												<div class="text-lg text-center font-medium leading-none">
@@ -27,31 +28,58 @@
 												</p>
 											</NavigationMenuLink>
 										</NuxtLink>
+										<NavigationMenuLink
+											v-else
+											class="cursor-not-allowed block select-none space-y-1 rounded-md p-3 leading-none"
+										>
+											<div class="text-lg text-center font-medium leading-none">
+												{{ component.displayName ?? $t(component.key) }}
+											</div>
+											<p v-if="component.description" class="line-clamp-2 text-sm leading-snug text-muted-foreground">
+												{{ component.description }}
+											</p>
+										</NavigationMenuLink>
 										<Separator />
 									</li>
 									<li v-for="child in component.children" :key="child.key">
 										<NuxtLink
 											:to="child.to"
 											class="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+											v-if="!child.disabled"
 										>
-											<NavigationMenuLink>
+											<NavigationMenuLink as-child>
 												<div class="text-sm font-medium leading-none">{{ child.displayName ?? $t(child.key) }}</div>
 												<p v-if="child.description" class="line-clamp-2 text-sm leading-snug text-muted-foreground">
 													{{ child.description }}
 												</p>
 											</NavigationMenuLink>
 										</NuxtLink>
+										<NavigationMenuLink
+											v-else
+											class="cursor-not-allowed block select-none space-y-1 rounded-md p-3 leading-none"
+										>
+											<div class="text-sm font-medium leading-none">{{ child.displayName ?? $t(child.key) }}</div>
+											<p v-if="child.description" class="line-clamp-2 text-sm leading-snug text-muted-foreground">
+												{{ child.description }}
+											</p>
+										</NavigationMenuLink>
 									</li>
 								</ul>
 							</NavigationMenuContent>
 						</template>
 						<template v-else>
 							<template v-if="component.to">
-								<NuxtLink :to="component.to" :exact-active-class="activeClass">
+								<NuxtLink :to="component.to" :exact-active-class="activeClass" v-if="!component.disabled">
 									<NavigationMenuLink :class="navigationMenuTriggerStyle()">
 										{{ component.displayName ?? $t(component.key) }}
 									</NavigationMenuLink>
 								</NuxtLink>
+								<NavigationMenuLink
+									v-else
+									class="cursor-not-allowed block select-none space-y-1 rounded-md p-3 leading-none"
+								>
+									{{ component.displayName ?? $t(component.key) }}
+								</NavigationMenuLink>
 							</template>
 							<template v-else>
 								<NavigationMenuLink>
@@ -176,6 +204,7 @@ interface NavigationMenuItem {
 	displayName?: string;
 	description?: string;
 	to?: string;
+	disabled?: boolean;
 	children?: NavigationMenuItem[];
 }
 
@@ -196,7 +225,8 @@ const navbar = computed<NavigationMenuItem[]>(() => [
 			},
 			{
 				key: 'games.roulette',
-				to: '/games/roulette'
+				to: '/games/roulette',
+				description: 'Spin the wheel and win big'
 			},
 			{
 				key: 'games.RockPaperScissors',
@@ -204,7 +234,8 @@ const navbar = computed<NavigationMenuItem[]>(() => [
 			},
 			{
 				key: 'games.poker',
-				to: '/games/poker'
+				to: '/games/poker',
+				disabled: true
 			}
 		]
 	},
