@@ -4,8 +4,7 @@ import { type MessageEvent, WebSocket } from "ws";
 import { z } from "zod";
 // @deno-types="@types/seedrandom"
 import seedrandom from "seedrandom";
-import { encodeHex } from "hex";
-import { makeid, sleep } from "./utils.ts";
+import { makeid, sleep, hashText } from "./utils.ts";
 import {
 	messageTypes,
 	roulette_numbers,
@@ -15,6 +14,9 @@ import {
 
 const DEALER_KEY = Deno.env.get("DEALER_KEY");
 
+const timeout = <T>(prom: Promise<T>, time: number) =>
+	Promise.race([prom, new Promise((_, rej) => setTimeout(() => rej("timeout"), time))]) as Promise<T>;
+
 const create_new_ws_client = async (dealer_key: string | undefined) => {
 	const url = `ws://localhost:3000/roulette${
 		dealer_key ? `?dealer_key=${dealer_key}` : ""
@@ -23,7 +25,12 @@ const create_new_ws_client = async (dealer_key: string | undefined) => {
 
 	consola.info(`Connecting to server at ${websocket.url}`);
 
-	await new Promise((resolve) => websocket.addEventListener("open", resolve));
+	websocket.addEventListener("error", (event) => {
+		consola.error(`Error connecting to server at ${websocket.url}: ${event}`);
+		return new Error(`Error connecting to server at ${websocket.url}: ${event}`);
+	});
+
+	await timeout(new Promise((resolve) => websocket.addEventListener("open", resolve)), 1000);
 
 	consola.success(`Connected to server at ${websocket.url}`);
 
@@ -31,7 +38,6 @@ const create_new_ws_client = async (dealer_key: string | undefined) => {
 		const message = parse_message(event);
 
 		if (!message) {
-			consola.error(`Invalid message received`, event);
 			return;
 		}
 
@@ -48,19 +54,16 @@ const create_new_ws_client = async (dealer_key: string | undefined) => {
 	});
 
 	websocket.addEventListener("close", (event) => {
-		consola.info(`Connection closed: ${event}`);
+		consola.info(`Connection closed: ${JSON.stringify(event)}`);
 		ws = null;
-	});
-
-	websocket.addEventListener("error", (event) => {
-		consola.error(`Error: ${event}`);
-		ws = null;
+		is_successfully_connected = false;
 	});
 
 	return websocket;
 };
 
 let ws: WebSocket | null = null;
+let is_successfully_connected = false;
 
 const handlers = {
 	welcome() {
@@ -68,17 +71,26 @@ const handlers = {
 
 		send("authenticate", { token: "123" });
 	},
-	user_joined({ peer_id, seed }: { peer_id: string; seed: string }) {
+	async user_joined({ peer_id, seed }: { peer_id: string; seed: string }) {
 		consola.info(`User ${peer_id} joined`);
 		current_players[peer_id] = seed;
 
-		send("server_seed", { server_seed, peer_id });
+		const server_seed_hash = await hashText(server_seed);
+		send("server_seed", { server_seed: server_seed_hash, peer_id });
+
+		if (waiting_for_bets_until) {
+			const seconds_left = Math.floor(
+				(waiting_for_bets_until.getTime() - Date.now()) / 1000,
+			);
+			send("bets_close_in", { seconds: seconds_left, peer_id });
+		}
 	},
 	user_left({ peer_id }: { peer_id: string }) {
 		consola.info(`User ${peer_id} left`);
 		delete current_players[peer_id];
 	},
 	authenticated() {
+		is_successfully_connected = true;
 		consola.info("Authenticated");
 	},
 	place_bet(
@@ -96,17 +108,26 @@ const handlers = {
 		bets[peer_id] = bets[peer_id] || [];
 		bets[peer_id].push({ amount, bet });
 
-		send("bet_placed", { amount, peer_id });
+		send("bet_placed", { amount, peer_id, bet });
 	},
 };
 
 const parse_message = (event: MessageEvent) => {
+	let message = null;
 	try {
-		const message = JSON.parse(event.data.toString());
-		return messageTypes.parse(message);
-	} catch (error) {
-		consola.error(`Error parsing message ${event.data.toString()}: ${error}`);
+		message = JSON.parse(event.data.toString());
+	} catch (_) {
+		consola.warn(`Message is not Json: ${event.data.toString()}`);
+		return null;
 	}
+	const parsed = messageTypes.safeParse(message);
+
+	if (!parsed.success) {
+		consola.warn(`Message is not correct: ${event.data.toString()}`);
+		return null;
+	}
+
+	return parsed.data;
 };
 
 const send = (
@@ -119,7 +140,7 @@ const send = (
 	});
 
 	if (!success) {
-		consola.error(`Trying to send invalid ${type} message: ${data}`);
+		consola.error(`Trying to send invalid ${type} message: ${JSON.stringify(data)}`);
 		return;
 	}
 
@@ -142,37 +163,42 @@ let bets: Record<string, Array<Bet>> = {};
 let allows_bets = true;
 let server_seed = "1234";
 let winning_number: z.infer<typeof roulette_numbers> | null = null;
+let waiting_for_bets_until: Date | null = null;
 
 const handle_waiting_for_bets = async () => {
 	consola.info("Waiting for bets");
 
-	let all_player_bets = Object.keys(current_players).filter((player) =>
-		bets[player] !== undefined
-	).flatMap((player) => bets[player]);
+	let all_player_bets = Object.keys(current_players)
+		.filter((player) => bets[player] !== undefined)
+		.flatMap((player) => bets[player]);
 
 	while (all_player_bets.length === 0) {
 		await sleep(1000);
-		all_player_bets = Object.keys(current_players).filter((player) =>
-			bets[player] !== undefined
-		).flatMap((player) => bets[player]);
+		all_player_bets = Object.keys(current_players)
+			.filter((player) => bets[player] !== undefined)
+			.flatMap((player) => bets[player]);
 	}
-
-	consola.info("All player bets", all_player_bets);
 
 	// There is at least one bet. Wait 10 seconds for more bets
 	send("bets_close_in", { seconds: waiting_for_bets_timeout });
 
+	waiting_for_bets_until = new Date(Date.now() + waiting_for_bets_timeout * 1000);
+
 	await sleep((waiting_for_bets_timeout + 5) * 1000);
 
-	consola.info("No more bets");
+	all_player_bets = Object.keys(current_players)
+			.filter((player) => bets[player] !== undefined)
+			.flatMap((player) => bets[player]);
+
+	consola.info("No more bets", all_player_bets);
 
 	allows_bets = false;
-
-	send("server_seed", { server_seed });
 
 	send("no_more_bets");
 
 	consola.info("Spinning wheel");
+
+	await sleep(3000);
 };
 
 /**
@@ -269,12 +295,12 @@ const win_multiplier: Record<z.infer<typeof roulette_values>, number> = {
 	"1_34": 3,
 	"2_35": 3,
 	"3_36": 3,
-	"odd": 2,
-	"even": 2,
+	odd: 2,
+	even: 2,
 	"1_18": 2,
 	"19_36": 2,
-	"red": 2,
-	"black": 2,
+	red: 2,
+	black: 2,
 };
 
 const handle_spinning_wheel = async () => {
@@ -284,12 +310,7 @@ const handle_spinning_wheel = async () => {
 
 	consola.info(`Combined seed: ${combined_seed}`);
 
-	const seed = await crypto.subtle.digest(
-		"SHA-256",
-		new TextEncoder().encode(combined_seed),
-	);
-
-	const random = seedrandom(encodeHex(seed));
+	const random = seedrandom(await hashText(combined_seed));
 
 	const win_map_size = Object.keys(win_map).length;
 
@@ -314,27 +335,30 @@ const handle_paying_out = async (
 
 	consola.info("Winning bets", winning_bets);
 
-	const winning_amounts = Object.entries(bets)
-		.map(([peer_id, player_bets]) => {
-			const player_win = player_bets
-				.filter((bet) => winning_bets.includes(bet.bet))
-				.map((bet) => win_multiplier[bet.bet] * bet.amount)
-				.reduce((a, b) => a + b, 0);
+	const res = Object.entries(bets).map(([peer_id, player_bets]) => {
+		const win_amount = player_bets
+			.filter(bet => winning_bets.includes(bet.bet))
+			.map(bet => win_multiplier[bet.bet] * bet.amount)
+			.reduce((a, b) => a + b, 0);
 
-			if (player_win > 0) {
-				consola.info(`Player ${peer_id} won ${player_win}`);
-			}
+		const loss_amount = player_bets
+			.filter(bet => !winning_bets.includes(bet.bet))
+			.reduce((a, b) => a + b.amount, 0);
 
-			return { peer_id, player_win };
-		})
-		.filter((win) => win.player_win > 0);
+		return { peer_id, amount: win_amount - loss_amount };
+	});
+
+	const winning_amounts = res.filter((win) => win.amount > 0);
+	const losing_amounts = res.filter((loss) => loss.amount <= 0).map((loss) => ({ ...loss, amount: -loss.amount }));
 
 	consola.info("Winning amounts", winning_amounts);
+	consola.info("Losing amounts", losing_amounts);
 
 	send("result", {
 		winning_number,
 		winning_bets,
 		winning_amounts,
+		losing_amounts,
 		server_seed,
 		client_seeds: Object.values(current_players),
 	});
@@ -345,6 +369,7 @@ const reset = () => {
 	allows_bets = true;
 	server_seed = makeid(10);
 	winning_number = null;
+	waiting_for_bets_until = null;
 };
 
 // Learn more at https://docs.deno.com/runtime/manual/examples/module_metadata#concepts
@@ -354,9 +379,19 @@ if (import.meta.main) {
 	while (true) {
 		reset();
 
-		if (!ws) {
-			ws = await create_new_ws_client(DEALER_KEY);
+		// Create a new websocket client if it doesn't exist
+		if (!ws && (ws =  await create_new_ws_client(DEALER_KEY).catch(_ => null)) == null) {
+			consola.error(`Error creating websocket client`);
+			await sleep(5000);
+			continue;
 		}
+
+		if (!is_successfully_connected) {
+			await sleep(500);
+			continue;
+		}
+
+		send("server_seed", { server_seed: await hashText(server_seed) });
 
 		try {
 			await handle_waiting_for_bets();
@@ -365,9 +400,7 @@ if (import.meta.main) {
 		} catch (error) {
 			consola.error(`Error handling game state: ${error}`);
 
-			const player_refunds = Object.entries(bets).map((
-				[peer_id, bets],
-			) => ({
+			const player_refunds = Object.entries(bets).map(([peer_id, bets]) => ({
 				peer_id,
 				amount: bets.reduce((a, b) => a + b.amount, 0),
 			}));

@@ -33,6 +33,10 @@ export default {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))'
 				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))'
+				},
 				muted: {
 					DEFAULT: 'hsl(var(--muted))',
 					foreground: 'hsl(var(--muted-foreground))'
@@ -79,6 +83,12 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'collapsible-down': 'collapsible-down 0.2s ease-in-out',
 				'collapsible-up': 'collapsible-up 0.2s ease-in-out'
+			},
+			gridTemplateColumns: {
+				'14': 'repeat(14, minmax(0, 1fr))'
+			},
+			gridTemplateRows: {
+				'roulette': 'repeat(3, 2fr) repeat(2, 1fr)'
 			}
 		}
 	},

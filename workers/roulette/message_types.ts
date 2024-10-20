@@ -105,25 +105,34 @@ const betPlacedMessage = z.object({
 	type: z.literal("bet_placed"),
 	peer_id: z.string(),
 	amount: z.number().nonnegative(),
+	bet: roulette_values,
 });
 
 const betsCloseInMessage = z.object({
 	type: z.literal("bets_close_in"),
 	seconds: z.number().nonnegative(),
+	peer_id: z.string().optional(),
 });
 
 const noMoreBetsMessage = z.object({
 	type: z.literal("no_more_bets"),
 });
 
+const player_result = z.object({
+	peer_id: z.string(),
+	amount: z.number().nonnegative(),
+});
+
 const resultMessage = z.object({
 	type: z.literal("result"),
 	winning_number: roulette_numbers,
 	winning_bets: z.array(roulette_values),
-	winning_amounts: z.array(z.object({
-		peer_id: z.string(),
-		player_win: z.number().nonnegative(),
-	})),
+	winning_amounts: z.array(
+		player_result,
+	),
+	losing_amounts: z.array(
+		player_result,
+	),
 	server_seed: z.string(),
 	client_seeds: z.array(z.string()),
 });

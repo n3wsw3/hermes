@@ -1,5 +1,6 @@
 import consola from 'consola';
 import { Peer } from 'crossws';
+import { makeid } from '~/workers/roulette/utils';
 
 interface ConnectionInfo {
 	user_id: string;
@@ -12,7 +13,7 @@ type M = {
 
 type R = {
 	welcome: {};
-	user_joined: { peer_id: string };
+	user_joined: { peer_id: string; seed: string };
 	user_left: { peer_id: string };
 	authenticated: {};
 };
@@ -20,15 +21,18 @@ type R = {
 type CTX<Resp> = {
 	sendToCurrentPeer: <K extends keyof Resp>(type: K, response: Resp[K]) => void;
 	sendToAll: <K extends keyof Resp>(type: K, response: Resp[K]) => void;
+	sendToDealer: <K extends keyof Resp>(type: K, response: Resp[K]) => void;
+	sendToPeer: <K extends keyof Resp>(peer_id: string, type: K, response: Resp[K]) => void;
 	closeConnection: (code: number, reason: string) => void;
 	setUserIdForConnection: (user_id: string) => void;
 	deletePeerConnectionInfo: () => void;
 	getPeerConnectionInfo: () => ConnectionInfo | undefined;
+	getConnectedPeers: () => Peer[];
 	isDealerRequest: () => boolean;
 };
 
 type ConvertedType<T> = {
-    [K in keyof T]: { type: K } & T[K];
+	[K in keyof T]: { type: K } & T[K];
 }[keyof T];
 
 export type MessageHandlers<Message extends M, Resp extends R> = {
@@ -92,6 +96,15 @@ export function create_game<Message extends M, Response extends R>(
 			sendToAll(type, response) {
 				send_to_all(peer, type, response);
 			},
+			sendToPeer(peer_id, type, response) {
+				const connection = connections[peer_id];
+				if (connection === undefined) {
+					consola.warn('Peer not found', peer_id);
+					return;
+				}
+
+				connection.peer.send({ type, ...response });
+			},
 			closeConnection(code, reason) {
 				peer.close(code, reason);
 			},
@@ -104,46 +117,87 @@ export function create_game<Message extends M, Response extends R>(
 			getPeerConnectionInfo() {
 				return connections[peer.id];
 			},
+			getConnectedPeers() {
+				return Object.values(connections)
+					.map(connection => connection?.peer)
+					.filter(peer => peer !== undefined) as Peer[];
+			},
 			isDealerRequest() {
 				return is_dealer_request(peer);
+			},
+			sendToDealer(type, response) {
+				if (dealer_peer === null) {
+					consola.warn('No dealer available');
+					return;
+				}
+
+				send_to_peer(dealer_peer, type, response);
 			}
 		};
 	};
 
 	return defineWebSocketHandler({
 		open(peer) {
-			if (!has_dealer() && !is_dealer_request(peer)) {
+			const ctx = getCtx(peer);
+			if (!has_dealer() && !ctx.isDealerRequest()) {
 				peer.close(4999, 'No dealer available');
 				return;
-			} else if (has_dealer() && is_dealer_request(peer)) {
+			} else if (has_dealer() && ctx.isDealerRequest()) {
 				peer.close(4999, 'Dealer already connected');
 				return;
-			} else if (is_dealer_request(peer)) {
+			} else if (ctx.isDealerRequest()) {
 				dealer_peer = peer;
 			}
+
+			// Extract seed from query parameters
+			const url = peer.request?.url;
+			let seed = makeid(16);
+			if (!url) {
+				consola.warn('Cannot determine seed when url is not available');
+			} else {
+				const query = new URLSearchParams(url.slice(url.indexOf('?')));
+				const req_seed = query.get('seed');
+				if (req_seed) {
+					seed = req_seed.slice(0, 16);
+				}
+			}
+
 			peer_join(peer);
-			send_to_peer(peer, 'welcome', {});
-			send_to_all(peer, 'user_joined', { peer_id: peer.id });
+			ctx.sendToCurrentPeer('welcome', {});
 		},
 		message(peer, message) {
-			const m = message.json<IncomingMessage>();
+
+			
+			const messageText = message.text();
+			if (messageText === undefined) {
+				consola.warn('Message is not text', message);
+				return;
+			}
+
+			const m = JSON.parse(messageText) as IncomingMessage;
 			const connection = connections[peer.id];
+			const ctx = getCtx(peer);
 
 			if (connection === undefined && m.type !== 'authenticate') {
 				consola.warn('User not authenticated', peer);
 
-				peer.close(4001, 'Unauthorized');
+				ctx.closeConnection(4001, 'Unauthorized');
 			} else if (connection !== undefined && m.type === 'authenticate') {
 				consola.warn('User already authenticated', peer);
 
-				peer.close(4000, 'Bad Request');
+				ctx.closeConnection(4000, 'Bad Request');
 			} else {
-				handlers[m.type](getCtx(peer), m);
+				handlers[m.type](ctx, m);
 			}
 		},
 		close(peer, details) {
+			const ctx = getCtx(peer);
+
+			const connection = ctx.getPeerConnectionInfo();
+
 			consola.info('Peer disconnected', peer.id, details);
-			delete connections[peer.id];
+			ctx.deletePeerConnectionInfo();
+
 			if (dealer_peer === peer) {
 				dealer_peer = null;
 
@@ -157,7 +211,8 @@ export function create_game<Message extends M, Response extends R>(
 					connection.peer.close(4999, 'Dealer disconnected');
 				});
 			}
-			send_to_all(peer, 'user_left', { peer_id: peer.id });
+
+			ctx.sendToAll('user_left', { peer_id: peer.id });
 		}
 	});
 }
