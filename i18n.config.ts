@@ -49,7 +49,13 @@ export default defineI18nConfig(() => ({
 		sv: {
 			home: 'Hem',
 			leaderboard: 'Leaderboard',
-			games: 'Alla Spel',
+			allgames: 'Alla Spel',
+			games: {
+				blackjack: 'Blackjack',
+				roulette: 'Roulette',
+				RockPaperScissors: 'Sten Sax Påse',
+				poker: 'Poker'
+			},
 			prManager: 'PR Hanterare',
 			newPR: 'Nytt PR',
 			signIn: 'Logga in',
